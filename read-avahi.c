@@ -5,7 +5,8 @@
  * DNS server. Requires avahi-browse(1) and a running Avahi daemon.
  *
  * Output is hardcoded:
- * - dns.conf for unbound
+ * - dns.conf for unbound.conf(5)
+ * - hosts for a hosts(5)
  *
  * Copyright (c) 2021 Érico Nogueira
  *
@@ -31,6 +32,9 @@ int main()
 {
 	/* unbound config file */
 	FILE *fu = fopen("dns.conf", "w");
+	if (!fu) return 1;
+	/* hosts */
+	FILE *fh = fopen("hosts", "w");
 	if (!fu) return 1;
 
 	FILE *p = popen("avahi-browse --all --resolve --no-db-lookup --parsable --terminate", "re");
@@ -66,10 +70,12 @@ int main()
 		char *type = ipv6 ? "AAAA" : "A";
 
 		fprintf(fu, "local-data: \"%s. IN %s %s\"\n", name, type, ip);
+		fprintf(fh, "%s %s\n", ip, name);
 	}
 	free(line);
 
 	fclose(fu);
+	fclose(fh);
 	pclose(p);
 
 	return 0;
